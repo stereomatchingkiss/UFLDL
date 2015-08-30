@@ -49,6 +49,7 @@ std::vector<int> read_label(std::string const &file)
 void softmax_test()
 {
     ocv::ml::softmax<> sm;    
+    sm.set_lambda(0.0);
     sm.train(read_data("softmax_train_data.txt"),
              read_label("softmax_train_label.txt"));
     auto const TestData =
