@@ -57,11 +57,9 @@ void softmax_test()
     auto const TestLabel =
             read_label("softmax_test_label.txt");
     double correct = 0;
-    for(size_t i = 0; i != TestLabel.size(); ++i){
-        auto const Result =
-                sm.predict(TestData.block(0, i, TestData.rows(),
-                                          1));
-        if(Result == TestLabel[i]){
+    auto const &Predicts = sm.batch_predicts(TestData);
+    for(size_t i = 0; i != TestLabel.size(); ++i){        
+        if(Predicts[i] == TestLabel[i]){
             ++correct;
         }        
     }
