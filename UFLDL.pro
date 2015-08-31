@@ -17,11 +17,13 @@ include(../pri/cv.pri)
 INCLUDEPATH += ..
 
 SOURCES += main.cpp \
-    softmax_test.cpp
+    softmax_test.cpp \
+    mnist_reader.cpp
 
 include(deployment.pri)
 qtcAddDeployment()
 
 HEADERS += \
-    softmax_test.hpp
+    softmax_test.hpp \
+    mnist_reader.hpp
 
