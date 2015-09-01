@@ -40,8 +40,12 @@ std::vector<int> read_label(std::string const &file)
               std::istream_iterator<double>(),
               std::back_inserter(output));
 
-    return std::vector<int>(output.begin(),
-                            output.end());
+    std::vector<int> results(output.size());
+    for(size_t i = 0; i != output.size(); ++i){
+        results[i] = static_cast<int>(results[i]);
+    }
+
+    return results;
 }
 
 }
