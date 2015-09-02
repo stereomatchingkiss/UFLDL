@@ -54,23 +54,22 @@ cv::Mat visualize_network(const cv::Mat &input)
                                    Buf+cols*(Offset),
                                    input_temp.type());
 
-    for(int k = 0; ;){
-        for(int i = 0; i != rows; ++i){
-            for(int j = 0; j != cols; ++j){
-                if(k >= input_temp.cols){
-                    continue;
-                }
-                double min = 0.0, max = 0.0;
-                cv::minMaxLoc(cv::abs(input_temp.col(k)), &min, &max);
-                cv::Mat reshape_mat(SquareRows, SquareRows, input_temp.type());
-                copy_to(input_temp.col(k), reshape_mat);
-                if(max != 0.0){
-                    reshape_mat /= max;
-                }
-                reshape_mat.copyTo(array({j*(Offset), i*(Offset),
-                                          reshape_mat.cols, reshape_mat.rows}));
-                ++k;
+    int k = 0;
+    for(int i = 0; i != rows; ++i){
+        for(int j = 0; j != cols; ++j){
+            if(k >= input_temp.cols){
+                continue;
             }
+            double min = 0.0, max = 0.0;
+            cv::minMaxLoc(cv::abs(input_temp.col(k)), &min, &max);
+            cv::Mat reshape_mat(SquareRows, SquareRows, input_temp.type());
+            copy_to(input_temp.col(k), reshape_mat);
+            if(max != 0.0){
+                reshape_mat /= max;
+            }
+            reshape_mat.copyTo(array({j*(Offset), i*(Offset),
+                                      reshape_mat.cols, reshape_mat.rows}));
+            ++k;
         }
     }
 
