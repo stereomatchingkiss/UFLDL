@@ -73,9 +73,9 @@ cv::Mat visualize_network(const cv::Mat &input)
         }
     }
 
-    cv::normalize(array, array, 0, 1,
+    cv::normalize(array, array, 0, 255,
                   cv::NORM_MINMAX);
-    array *= 255.0;
+    //array *= 255.0;
     array.convertTo(array, CV_8U);
 
     return array;
