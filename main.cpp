@@ -1,10 +1,10 @@
+#include "autoencoder_test.hpp"
 #include "softmax_test.hpp"
 
-#include <Eigen/Dense>
-
 int main()
-{           
-    softmax_test();
+{
+    autoencoder_test();
+    //softmax_test();
 
     return 0;
 }
