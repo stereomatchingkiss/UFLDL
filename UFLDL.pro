@@ -22,7 +22,8 @@ INCLUDEPATH += ..
 SOURCES += main.cpp \
     softmax_test.cpp \
     mnist_reader.cpp \          
-    visualize_autoencoder.cpp
+    visualize_autoencoder.cpp \
+    autoencoder_test.cpp
 
 include(deployment.pri)
 qtcAddDeployment()
@@ -30,5 +31,6 @@ qtcAddDeployment()
 HEADERS += \
     softmax_test.hpp \
     mnist_reader.hpp \         
-    visualize_autoencoder.hpp
+    visualize_autoencoder.hpp \
+    autoencoder_test.hpp
 
