@@ -22,7 +22,7 @@ EMat read_img(std::string const &file_name,
               size_t rows, size_t cols)
 {
     std::ifstream in(file_name,
-                     std::ios::out | std::ios::binary);
+                     std::ios::in | std::ios::binary);
 
     EMat mat(rows, cols);
     for(size_t col = 0; col != mat.cols(); ++col){
@@ -39,21 +39,21 @@ EMat read_img(std::string const &file_name,
 void autoencoder_test()
 {
     cv::AutoBuffer<int> hidden_size(1);
-    hidden_size[0] = 25;
+    hidden_size[0] = 32;
 
     AutoEncoder ae(hidden_size);
-    ae.read("autoencoder_test.xml");
-    /*ae.set_reuse_layer(true);
-    ae.set_batch_size(10000);
+    ae.read("autoencoder_test_2.xml");
+    ae.set_reuse_layer(true);
+    ae.set_batch_size(400);
     ae.set_beta(3.0);
     ae.set_lambda(0.0001);
-    ae.set_learning_rate(4);
-    ae.set_max_iter(20000);
+    ae.set_learning_rate(0.1);
+    ae.set_max_iter(80000);
     ae.set_sparse(0.01);
-    ae.set_epsillon(1e-10);
+    ae.set_epsillon(1e-6);
 
     ae.train(read_img("image.txt", 64, 10000));
-    ae.write("autoencoder_test.xml");//*/
+    ae.write("autoencoder_test_2.xml");//*/
 
     auto &layer = ae.get_layer()[0];
     EMat const W1 = layer.w1_.transpose();
