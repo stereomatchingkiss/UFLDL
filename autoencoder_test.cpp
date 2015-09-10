@@ -77,6 +77,7 @@ void autoencoder_test()
         auto img_vision = visualize_network(img);
         cv::resize(img_vision, img_vision, {}, 4, 4);
         cv::imshow("", img_vision);
+        cv::imwrite("encoder_result.jpg", img_vision);
         cv::waitKey();
     }
 }
