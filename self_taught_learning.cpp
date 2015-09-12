@@ -19,14 +19,7 @@
 
 #include <boost/archive/text_oarchive.hpp>
 
-#include <future>
-#include <mutex>
-#include <sstream>
-#include <thread>
-
 namespace{
-
-std::mutex g_mutex;
 
 using MTSU = mnist_to_shark_vector<>;
 
@@ -113,47 +106,42 @@ void output_model_state(Model const &model)
 }
 
 template<typename Optimizer, typename Error, typename Model>
-std::string optimize_params(std::string const &encoder_name,
-                            size_t iterate,
-                            Optimizer *optimizer,
-                            Error *error,
-                            Model *model)
+void optimize_params(std::string const &encoder_name,
+                     size_t iterate,
+                     Optimizer *optimizer,
+                     Error *error,
+                     Model *model)
 {
     using namespace shark;
 
     Timer timer;
-    std::ostringstream str;
     for (size_t i = 0; i < iterate; ++i) {
         optimizer->step(*error);
-        //str<<i<<" Error: "<<optimizer->solution().value <<"\n";
+        std::cout<<i<<" Error: "<<optimizer->solution().value <<"\n";
     }
-    str<<"Elapsed time: " <<timer.stop()<<"\n";
-    str<<"Function evaluations: "<<error->evaluationCounter()<<"\n";
+    std::cout<<"Elapsed time: " <<timer.stop()<<"\n";
+    std::cout<<"Function evaluations: "<<error->evaluationCounter()<<"\n";
 
     exportFiltersToPGMGrid(encoder_name, model->encoderMatrix(), 28, 28);
     std::ofstream out(encoder_name);
     boost::archive::polymorphic_text_oarchive oa(out);
     model->write(oa);
-
-    return str.str();
 }
 
 template<typename Model>
-std::string train_autoencoder(std::vector<shark::RealVector> const &unlabel_data,
-                              std::string const &encoder_name,
-                              Model *model)
+void train_autoencoder(std::vector<shark::RealVector> const &unlabel_data,
+                       std::string const &encoder_name,
+                       Model *model)
 {
     using namespace shark;
 
     model->setStructure(unlabel_data[0].size(), 200);
 
-    //it is weird that initialization of the model parameters
-    //need to lock, maybe there are some functions are not thread safe
-    {
-        std::lock_guard<std::mutex> lock(g_mutex);
-        initRandomUniform(*model, -0.1*std::sqrt(1.0/unlabel_data[0].size()),
-                0.1*std::sqrt(1.0/unlabel_data[0].size()));
-    }
+    //Do not know which part is not thread safe, so I lock all of them
+    //except of the time consuming training loop
+    initRandomUniform(*model, -0.1*std::sqrt(1.0/unlabel_data[0].size()),
+            0.1*std::sqrt(1.0/unlabel_data[0].size()));
+
 
     SquaredLoss<RealVector> loss;
     UnlabeledData<RealVector> const Samples = createDataFromRange(unlabel_data);
@@ -170,32 +158,29 @@ std::string train_autoencoder(std::vector<shark::RealVector> const &unlabel_data
 
     IRpropPlusFull optimizer;
     optimizer.init(error);
-    return optimize_params(encoder_name, 200, &optimizer, &error, model);
+    optimize_params(encoder_name, 200, &optimizer, &error, model);
 }
 
 template<typename Model>
-std::string train_sparse_autoencoder(std::vector<shark::RealVector> const &unlabel_data,
-                                     std::string const &encoder_name,
-                                     Model *model)
+void train_sparse_autoencoder(std::vector<shark::RealVector> const &unlabel_data,
+                              std::string const &encoder_name,
+                              Model *model)
 {
     using namespace shark;
 
     //std::cout<<"set structure\n";
     model->setStructure(unlabel_data[0].size(), 200);
 
-    //it is weird that initialization of the model parameters
-    //need to lock, maybe there are some functions are not thread safe
-    {
-        std::lock_guard<std::mutex> lock(g_mutex);
-        if(std::is_same<Model, Autoencoder2>::value ||
-                std::is_same<Model, Autoencoder4>::value){
-            //std::cout<<"init ffnet by random uniform\n";
-            initRandomUniform(*model, -0.1*std::sqrt(1.0/unlabel_data[0].size()),
-                    0.1*std::sqrt(1.0/unlabel_data[0].size()));
-        }else{
-            //std::cout<<"init ffnet\n";
-            initialize_ffnet(model);
-        }
+    //Do not know which part is not thread safe, so I lock all of them
+    //except of the time consuming training loop
+    if(std::is_same<Model, Autoencoder2>::value ||
+            std::is_same<Model, Autoencoder4>::value){
+        //std::cout<<"init ffnet by random uniform\n";
+        initRandomUniform(*model, -0.1*std::sqrt(1.0/unlabel_data[0].size()),
+                0.1*std::sqrt(1.0/unlabel_data[0].size()));
+    }else{
+        //std::cout<<"init ffnet\n";
+        initialize_ffnet(model);
     }
 
     //std::cout<<"create data from range\n";
@@ -222,16 +207,16 @@ std::string train_sparse_autoencoder(std::vector<shark::RealVector> const &unlab
     optimizer.lineSearch().lineSearchType() = LineSearch::WolfeCubic;
     optimizer.init(error);
     //std::cout<<"run optimizer loop\n";
-    return optimize_params(encoder_name, 400, &optimizer, &error, model);
+    optimize_params(encoder_name, 400, &optimizer, &error, model);
 }
 
 template<typename Model>
-std::string prediction(std::string const &encoder_file,
-                       std::string const &rtree_file,
-                       std::vector<shark::RealVector> const &train_data,
-                       std::vector<unsigned int> const &train_label,
-                       Model *model,
-                       bool reuse_rtree = false)
+void prediction(std::string const &encoder_file,
+                std::string const &rtree_file,
+                std::vector<shark::RealVector> const &train_data,
+                std::vector<unsigned int> const &train_label,
+                Model *model,
+                bool reuse_rtree = false)
 {
     using namespace shark;
     {
@@ -244,11 +229,10 @@ std::string prediction(std::string const &encoder_file,
     train.inputs() = model->encode(train.inputs());
 
     RFClassifier rf_model;
-    std::ostringstream str;
     if(reuse_rtree){
         std::ifstream in2(rtree_file);
         boost::archive::polymorphic_text_iarchive ia2(in2);
-        str<<"begin to read "<<rtree_file<<"\n";
+        std::cout<<"begin to read "<<rtree_file<<"\n";
         rf_model.read(ia2);
     }else{
         RFTrainer trainer;
@@ -259,11 +243,11 @@ std::string prediction(std::string const &encoder_file,
         rf_model.write(oa);
     }
 
-    str<<"begin to predict\n";
+    std::cout<<"begin to predict\n";
     ZeroOneLoss<unsigned int, RealVector> loss;
     Data<RealVector> prediction = rf_model(train.inputs());
-    str<<"Random Forest on training set accuracy: "
-      <<1. - loss.eval(train.labels(), prediction)<<"\n";
+    std::cout<<"Random Forest on training set accuracy: "
+            <<1. - loss.eval(train.labels(), prediction)<<"\n";
 
     MTSU me;
     std::vector<int> test_labels;
@@ -280,125 +264,80 @@ std::string prediction(std::string const &encoder_file,
                 createLabeledDataFromRange(test_data, utest_labels);
         test_data_set.inputs() = model->encode(test_data_set.inputs());
         prediction = rf_model(test_data_set.inputs());
-        str<<"Random Forest on test set accuracy: "
-          <<1. - loss.eval(test_data_set.labels(), prediction) <<"\n";
+        std::cout<<"Random Forest on test set accuracy: "
+                <<1. - loss.eval(test_data_set.labels(), prediction) <<"\n";
     }else{
-        str<<"cannot read test data\n";
+        std::cout<<"cannot read test data\n";
     }
-    str<<"\n";
-
-    return str.str();
+    std::cout<<"\n";
 }
 
 void autoencoder_prediction(std::vector<shark::RealVector> const &train_data,
                             std::vector<unsigned int> const &train_label)
 {
-    auto result1 = std::async(std::launch::async,
-                              [&]()
     {
         Autoencoder1 model;
-        std::string msg;
-        msg = train_autoencoder(train_data, "ls_ls.txt", &model);
-        msg += prediction("ls_ls.txt", "ls_ls_rtree.txt", train_data,
-                          train_label, &model);
-        return msg;
-    });//*/
+        train_autoencoder(train_data, "ls_ls.txt", &model);
+        prediction("ls_ls.txt", "ls_ls_rtree.txt", train_data,
+                   train_label, &model);
+    }
 
-    auto result2 = std::async(std::launch::async,
-                              [&]()
     {
         Autoencoder2 model;
-        std::string msg;
-        msg = train_autoencoder(train_data, "tied_ls_ls.txt", &model);
-        msg += prediction("tied_ls_ls.txt", "tied_ls_ls_rtree.txt", train_data,
-                          train_label, &model);
-        return msg;
-    });//*/
+        train_autoencoder(train_data, "tied_ls_ls.txt", &model);
+        prediction("tied_ls_ls.txt", "tied_ls_ls_rtree.txt", train_data,
+                   train_label, &model);
+    }
 
     //Autoencoder3 has bug, the prediction will stuck and cannot complete
     //Do not not it is cause by Shark3.0 beta or my fault
-    /*auto result3 = std::async(std::launch::async,
-                              [&]()
+    /*
     {
         Autoencoder3 model;
-        std::string msg;
-        //msg = train_autoencoder(train_data, "dropls_ls.txt", &model);
-        msg += prediction("dropls_ls.txt", "dropls_ls_rtree.txt", train_data,
-                          train_label, &model);
-        return msg;
+        train_autoencoder(train_data, "dropls_ls.txt", &model);
+        prediction("dropls_ls.txt", "dropls_ls_rtree.txt", train_data,
+                   train_label, &model);
     });//*/
 
-    auto result4 = std::async(std::launch::async,
-                              [&]()
     {
         Autoencoder4 model;
-        std::string msg;
-        msg = train_autoencoder(train_data, "tied_dropls_ls.txt", &model);
-        msg += prediction("tied_dropls_ls.txt", "tied_dropls_ls_rtree.txt", train_data,
-                          train_label, &model);
-        return msg;
-    });//*/
-
-    std::cout<<result1.get()<<"\n";
-    std::cout<<result2.get()<<"\n";
-    //std::cout<<result3.get()<<"\n";
-    std::cout<<result4.get()<<"\n";
+        train_autoencoder(train_data, "tied_dropls_ls.txt", &model);
+        prediction("tied_dropls_ls.txt", "tied_dropls_ls_rtree.txt", train_data,
+                   train_label, &model);
+    }
 }
 
 void sparse_autoencoder_prediction(std::vector<shark::RealVector> const &train_data,
                                    std::vector<unsigned int> const &train_label)
 {
-    auto result1 = std::async(std::launch::async,
-                              [&]()
     {
         Autoencoder1 model;
-        std::string msg;
-        msg = train_sparse_autoencoder(train_data, "sparse_ls_ls.txt", &model);
-        msg += prediction("sparse_ls_ls.txt", "sparse_ls_ls_rtree.txt", train_data,
-                          train_label, &model);
-        return msg;
-    });//*/
+        train_sparse_autoencoder(train_data, "sparse_ls_ls.txt", &model);
+        prediction("sparse_ls_ls.txt", "sparse_ls_ls_rtree.txt", train_data,
+                   train_label, &model);
+    }
 
-    auto result2 = std::async(std::launch::async,
-                              [&]()
     {
         Autoencoder2 model;
-        std::string msg;
-        msg = train_sparse_autoencoder(train_data, "sparse_tied_ls_ls.txt", &model);
-        msg +=  prediction("sparse_tied_ls_ls.txt", "sparse_tied_ls_ls_rtree.txt", train_data,
-                           train_label, &model);
-        return msg;
-    });//*/
+        train_sparse_autoencoder(train_data, "sparse_tied_ls_ls.txt", &model);
+        prediction("sparse_tied_ls_ls.txt", "sparse_tied_ls_ls_rtree.txt", train_data,
+                   train_label, &model);
+    }
 
-    //std::cout<<result1.get()<<"\n";
-    //std::cout<<result2.get()<<"\n";
-
-    auto result3 = std::async(std::launch::async,
-                              [&]()
     {
         Autoencoder3 model;
-        std::string msg;
-        msg = train_sparse_autoencoder(train_data, "sparse_dropls_ls.txt", &model);
-        msg += prediction("sparse_dropls_ls.txt", "sparse_dropls_ls_rtree.txt", train_data,
-                          train_label, &model);
-        return msg;
-    });//*/
+        train_sparse_autoencoder(train_data, "sparse_dropls_ls.txt", &model);
+        prediction("sparse_dropls_ls.txt", "sparse_dropls_ls_rtree.txt", train_data,
+                   train_label, &model);
+    }
 
-    auto result4 = std::async(std::launch::async,
-                              [&]()
+
     {
         Autoencoder4 model;
-        std::string msg;
-        msg = train_sparse_autoencoder(train_data, "sparse_tied_dropls_ls.txt", &model);
-        msg +=  prediction("sparse_tied_dropls_ls.txt", "sparse_tied_dropls_ls_rtree.txt",
-                           train_data, train_label, &model);
-        return msg;
-    });//*/
-
-    std::cout<<result1.get()<<"\n";
-    std::cout<<result2.get()<<"\n";
-    std::cout<<result3.get()<<"\n";
-    std::cout<<result4.get()<<"\n";
+        train_sparse_autoencoder(train_data, "sparse_tied_dropls_ls.txt", &model);
+        prediction("sparse_tied_dropls_ls.txt", "sparse_tied_dropls_ls_rtree.txt",
+                   train_data, train_label, &model);
+    }
 }
 
 }
@@ -424,7 +363,7 @@ void self_taught_learning()
         //release the memory asap since this test will eat up lot of rams
         me.mat_.swap(std::vector<RealVector>());
 
-        autoencoder_prediction(unlabel_data, unlabel_data_label);
+        //autoencoder_prediction(unlabel_data, unlabel_data_label);
         sparse_autoencoder_prediction(unlabel_data, unlabel_data_label);
     }
 }
