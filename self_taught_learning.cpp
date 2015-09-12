@@ -137,8 +137,6 @@ void train_autoencoder(std::vector<shark::RealVector> const &unlabel_data,
 
     model->setStructure(unlabel_data[0].size(), 200);
 
-    //Do not know which part is not thread safe, so I lock all of them
-    //except of the time consuming training loop
     initRandomUniform(*model, -0.1*std::sqrt(1.0/unlabel_data[0].size()),
             0.1*std::sqrt(1.0/unlabel_data[0].size()));
 
@@ -171,8 +169,6 @@ void train_sparse_autoencoder(std::vector<shark::RealVector> const &unlabel_data
     //std::cout<<"set structure\n";
     model->setStructure(unlabel_data[0].size(), 200);
 
-    //Do not know which part is not thread safe, so I lock all of them
-    //except of the time consuming training loop
     if(std::is_same<Model, Autoencoder2>::value ||
             std::is_same<Model, Autoencoder4>::value){
         //std::cout<<"init ffnet by random uniform\n";
