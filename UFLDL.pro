@@ -14,8 +14,10 @@ DEFINES += OCV_TEST_SOFTMAX
 #msvc:QMAKE_CXXFLAGS_RELEASE += /O2 /openmp /arch:AVX
 #gcc:QMAKE_CXXFLAGS_RELEASE += -O3 -march=native -fopenmp -D_GLIBCXX_PARALLEL
 
-include(../pri/eigen.pri)
+include(../pri/boost.pri)
 include(../pri/cv.pri)
+include(../pri/eigen.pri)
+include(../pri/shark.pri)
 
 INCLUDEPATH += ..
 
@@ -23,7 +25,8 @@ SOURCES += main.cpp \
     softmax_test.cpp \
     mnist_reader.cpp \          
     visualize_autoencoder.cpp \
-    autoencoder_test.cpp
+    autoencoder_test.cpp \
+    self_taught_learning.cpp
 
 include(deployment.pri)
 qtcAddDeployment()
@@ -32,5 +35,6 @@ HEADERS += \
     softmax_test.hpp \
     mnist_reader.hpp \         
     visualize_autoencoder.hpp \
-    autoencoder_test.hpp
+    autoencoder_test.hpp \
+    self_taught_learning.hpp
 
