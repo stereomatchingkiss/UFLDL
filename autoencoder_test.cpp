@@ -34,6 +34,18 @@ EMat read_img(std::string const &file_name,
     return mat;
 }
 
+void write_mat(std::string const &file_name,
+               EMat const &input)
+{
+    std::ofstream out(file_name,
+                      std::ios::out | std::ios::binary);
+    for(size_t col = 0; col != input.cols(); ++col){
+        for(size_t row = 0; row != input.rows(); ++row){
+            out<<input(row, col);
+        }
+    }
+}
+
 }
 
 void autoencoder_test()
@@ -46,13 +58,13 @@ void autoencoder_test()
     //by reuse the trained layer until the results are
     //reasonable. Or train the example with full batch size
     AutoEncoder ae(hidden_size);
-    /*{
+    {
         std::ifstream in("autoencoder_test_2.xml");
         if(in.is_open()){
             ae.read("autoencoder_test_2.xml");
         }
-    }*/
-    ae.set_batch_size(400);
+    }
+    /*ae.set_batch_size(400);
     ae.set_beta(3.0);
     ae.set_lambda(0.0001);
     ae.set_learning_rate(4);
@@ -68,11 +80,13 @@ void autoencoder_test()
         ae.set_max_iter(7000);
         ae.train(Train);
     }
-    ae.write("autoencoder_test_2.xml");
+    ae.write("autoencoder_test_2.xml");*/
 
     for(size_t i = 0; i != hidden_size.size(); ++i){
         auto &layer = ae.get_layer()[i];
         EMat const W1 = layer.w1_.transpose();
+        std::cout<<W1.rows()<<", "<<W1.cols()<<"\n";
+        write_mat("W1_Mat.txt", layer.w1_);
         cv::Mat img = ocv::eigen::eigen2cv_ref(W1);
         auto img_vision = visualize_network(img);
         cv::resize(img_vision, img_vision, {}, 4, 4);
