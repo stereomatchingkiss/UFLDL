@@ -1,0 +1,26 @@
+cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
+
+project(UFLDL CXX)
+
+#add_definitions(-DARMA_NO_DEBUG)
+
+set(CMAKE_BUILD_TYPE Release)
+set(OCV_PATH ${CMAKE_CURRENT_SOURCE_DIR}/..)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+
+add_executable(${PROJECT_NAME}
+main.cpp
+softmax_test.hpp
+softmax_test.cpp
+mnist_reader.hpp
+mnist_reader.cpp
+visualize_autoencoder.hpp
+visualize_autoencoder.cpp
+autoencoder_test.hpp
+autoencoder_test.cpp 
+)
+
+include(../pri/boost.cmake)
+include(../pri/cv.cmake)
+include(../pri/eigen.cmake)
