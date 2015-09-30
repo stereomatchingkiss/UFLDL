@@ -3,6 +3,7 @@
 #include <ocv_libs/ml/deep_learning/softmax.hpp>
 
 #include <fstream>
+#include <iterator>
 
 using namespace ocv::ml;
 

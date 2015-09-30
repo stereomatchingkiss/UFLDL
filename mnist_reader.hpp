@@ -1,11 +1,12 @@
 #ifndef MNIST_READER_HPP
 #define MNIST_READER_HPP
 
-#include <shark/Data/Dataset.h>
+//#include <shark/Data/Dataset.h>
 
 #include <fstream>
 #include <functional>
 #include <string>
+#include <vector>
 
 template<typename EigenMat>
 struct mnist_to_eigen
@@ -36,7 +37,7 @@ operator()(std::ifstream &in, int number_of_images,
     }
 }
 
-template<typename T = shark::RealVector>
+/*template<typename T = shark::RealVector>
 struct mnist_to_shark_vector
 {
     void operator()(std::ifstream &in, int number_of_images,
@@ -63,7 +64,7 @@ operator()(std::ifstream &in, int number_of_images,
         }
         mat_.emplace_back(std::move(sample));
     }
-}
+}*/
 
 bool
 read_mnist(std::string const &file_name,
