@@ -18,9 +18,12 @@ mnist_reader.cpp
 visualize_autoencoder.hpp
 visualize_autoencoder.cpp
 autoencoder_test.hpp
-autoencoder_test.cpp 
+autoencoder_test.cpp
+self_taught_learning_mlpack.hpp
+self_taught_learning_mlpack.cpp
 )
 
-include(../pri/boost.cmake)
+#include(../pri/boost.cmake)
 include(../pri/cv.cmake)
 include(../pri/eigen.cmake)
+include(../pri/mlpack.cmake)

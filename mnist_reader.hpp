@@ -8,6 +8,32 @@
 #include <string>
 #include <vector>
 
+template<typename Mat>
+struct mnist_to_arma
+{
+public:
+    void operator()(std::ifstream &in, int number_of_images,
+                    int n_rows, int n_cols);
+
+    Mat mat_;
+};
+
+template<typename Mat>
+void mnist_to_arma<Mat>::
+operator()(std::ifstream &in, int number_of_images,
+           int n_rows, int n_cols)
+{
+    using value_type = typename Mat::value_type;
+    mat_.set_size(n_rows * n_cols, number_of_images);
+    for(int i = 0; i < number_of_images; ++i){
+        for(int j = 0; j != mat_.n_rows; ++j){
+            unsigned char temp = 0;
+            in.read((char*) &temp, sizeof(temp));
+            mat_(j, i) = value_type(temp);
+        }
+    }
+}
+
 template<typename EigenMat>
 struct mnist_to_eigen
 {
@@ -23,8 +49,8 @@ void mnist_to_eigen<EigenMat>::
 operator()(std::ifstream &in, int number_of_images,
            int n_rows, int n_cols)
 {
-    using Scalar = typename EigenMat::Scalar;    
-    mat_.resize(n_rows * n_cols, number_of_images);    
+    using Scalar = typename EigenMat::Scalar;
+    mat_.resize(n_rows * n_cols, number_of_images);
     for(int i = 0; i < number_of_images; ++i){
         for(int r = 0; r < n_rows; ++r){
             int const Offset = r * n_cols;
