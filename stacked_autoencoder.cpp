@@ -1,4 +1,4 @@
-#include "self_taught_learning_mlpack.hpp"
+#include "stacked_autoencoder.hpp"
 
 #include <ocv_libs/profile/measure.hpp>
 
@@ -84,7 +84,7 @@ size_t train_autoencoder(arma::mat &input,
     return Duration;
 }
 
-void pretrain()
+void pretrain(bool load_data = true)
 {
     std::vector<int> training_labels;
     if(read_mnist_data("mnist/train-images.idx3-ubyte",
@@ -99,7 +99,6 @@ void pretrain()
             train_labels(i) = training_labels[i];
         }
 
-        bool load_data = true;
         if(!load_data){
             size_t const Duration1 =
                     train_autoencoder(train_data.mat_, sae1_features, saef1, sae1);
@@ -190,7 +189,7 @@ void finetune_train()
 
 }
 
-void self_taught_learning_mlpack()
+void stacked_autoencoder()
 {
     pretrain();
     std::cout<<"-----------before finetune-----------------\n";

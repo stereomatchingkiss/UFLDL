@@ -1,8 +1,8 @@
 #include <mlpack/core.hpp>
 
 #include "autoencoder_test.hpp"
-#include "self_taught_learning_mlpack.hpp"
 #include "softmax_test.hpp"
+#include "stacked_autoencoder.hpp"
 
 #include <iostream>
 
@@ -16,7 +16,7 @@ int main()
 
     //autoencoder_test();
     //self_taught_learning();
-    self_taught_learning_mlpack();
+    stacked_autoencoder();
     //softmax_test();    
 
     return 0;

@@ -19,8 +19,8 @@ visualize_autoencoder.hpp
 visualize_autoencoder.cpp
 autoencoder_test.hpp
 autoencoder_test.cpp
-self_taught_learning_mlpack.hpp
-self_taught_learning_mlpack.cpp
+stacked_autoencoder.hpp
+stacked_autoencoder.cpp
 )
 
 #include(../pri/boost.cmake)
